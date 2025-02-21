@@ -1,11 +1,72 @@
-import yfinance as yf
 import streamlit as st
-import seaborn as sns
-import matplotlib.pyplot as plt
+import yfinance as yf
 import pandas as pd
+import plotly.graph_objects as go
 
-# Criação do expander
-with st.expander('Escolha', expanded=True):
+st.markdown('---')
+
+# Função para carregar os dados usando yfinance
+@st.cache_data
+def carregar_dados(tickers, data_inicio, data_fim):
+    dados = {}
+    for ticker in tickers:
+        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
+        dados[ticker] = hist
+    return pd.DataFrame(dados)
+
+def calcular_performance(dados):
+    if not dados.empty:
+        return (dados / dados.iloc[0] - 1) * 100
+    return dados
+
+def criar_grafico(ativos_selecionados, dados):
+    fig = go.Figure()
+    for ativo in ativos_selecionados:
+        fig.add_trace(go.Scatter(
+            x=dados.index,
+            y=dados[ativo],
+            name=ativo,
+            line=dict(width=1)
+        ))
+    fig.update_layout(
+        title='Desempenho Relativo dos Ativos (%)',
+        xaxis_title='Data',
+        yaxis_title='Performance (%)',
+        xaxis=dict(tickformat='%m/%Y'),
+        legend_title='Ativo',
+        legend_orientation='h',
+        plot_bgcolor='rgba(211, 211, 211, 0.15)' 
+    )
+    fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
+    return fig
+
+st.subheader('Desempenho Relativo')
+
+# Seleção de datas
+data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
+data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
+
+# Lista predefinida de tickers (ações brasileiras)
+tickers = ['PETR4.SA', 'VALE3.SA', 'ITUB4.SA', 'BBAS3.SA', 'ABEV3.SA', 'WEGE3.SA', 'RENT3.SA', 'JBSS3.SA', 'ELET3.SA']
+
+# Carregar os dados
+dados = carregar_dados(tickers, data_inicio, data_fim)
+
+# Verificar se há dados carregados antes de calcular a performance
+if not dados.empty:
+    dados = calcular_performance(dados)
+
+# Criação do componente multiselect
+ativos_selecionados = st.multiselect('Selecione:', options=tickers, placeholder="Ativos")
+
+# Exibir o gráfico
+if ativos_selecionados:
+    fig = criar_grafico(ativos_selecionados, dados)
+    st.plotly_chart(fig)
+else:
+    st.write('Selecione pelo menos um ativo.')
+
+with st.expander('Seleção Adicional', expanded=True):
     opcao = st.radio('Selecione', ['Índices', 'Ações', 'Commodities'])
 
     if opcao == 'Índices':
@@ -39,76 +100,19 @@ with st.expander('Escolha', expanded=True):
             ticker = commodities[escolha]
 
     elif opcao == 'Ações':
-        acoes = ['ALOS3', 'ABEV3', 'ASAI3', 'AURE3', 'AMOB3', 'AZUL4', 'AZZA3', 'B3SA3', 'BBSE3', 'BBDC3', 'BBDC4', 
-                 'BRAP4', 'BBAS3', 'BRKM5', 'BRAV3', 'BRFS3', 'BPAC11', 'CXSE3', 'CRFB3', 'CCRO3', 'CMIG4', 'COGN3', 
-                 'CPLE6', 'CSAN3', 'CPFE3', 'CMIN3', 'CVCB3', 'CYRE3', 'ELET3', 'ELET6', 'EMBR3', 'ENGI11', 'ENEV3', 
-                 'EGIE3', 'EQTL3', 'FLRY3', 'GGBR4', 'GOAU4', 'NTCO3', 'HAPV3', 'HYPE3', 'IGTI11', 'IRBR3', 'ISAE4', 
-                 'ITSA4', 'ITUB4', 'JBSS3', 'KLBN11', 'RENT3', 'LREN3', 'LWSA3', 'MGLU3', 'POMO4', 'MRFG3', 'BEEF3', 
-                 'MRVE3', 'MULT3', 'PCAR3', 'PETR3', 'PETR4', 'RECV3', 'PRIO3', 'PETZ3', 'PSSA3', 'RADL3', 'RAIZ4', 
-                 'RDOR3', 'RAIL3', 'SBSP3', 'SANB11', 'STBP3', 'SMTO3', 'CSNA3', 'SLCE3', 'SUZB3', 'TAEE11', 'VIVT3', 
-                 'TIMS3', 'TOTS3', 'UGPA3', 'USIM5', 'VALE3', 'VAMO3', 'VBBR3', 'VIVA3', 'WEGE3', 'YDUQ3']
+        acoes = ['ALOS3.SA', 'ABEV3.SA', 'ASAI3.SA', 'AURE3.SA', 'AMOB3.SA', 'AZUL4.SA', 'AZZA3.SA', 'B3SA3.SA', 'BBSE3.SA', 'BBDC3.SA', 'BBDC4.SA', 
+                'BRAP4.SA', 'BBAS3.SA', 'BRKM5.SA', 'BRAV3.SA', 'BRFS3.SA', 'BPAC11.SA', 'CXSE3.SA', 'CRFB3.SA', 'CCRO3.SA', 'CMIG4.SA', 'COGN3.SA', 
+                'CPLE6.SA', 'CSAN3.SA', 'CPFE3.SA', 'CMIN3.SA', 'CVCB3.SA', 'CYRE3.SA', 'ELET3.SA', 'ELET6.SA', 'EMBR3.SA', 'ENGI11.SA', 'ENEV3.SA', 
+                'EGIE3.SA', 'EQTL3.SA', 'FLRY3.SA', 'GGBR4.SA', 'GOAU4.SA', 'NTCO3.SA', 'HAPV3.SA', 'HYPE3.SA', 'IGTI11.SA', 'IRBR3.SA', 'ISAE4.SA', 
+                'ITSA4.SA', 'ITUB4.SA', 'JBSS3.SA', 'KLBN11.SA', 'RENT3.SA', 'LREN3.SA', 'LWSA3.SA', 'MGLU3.SA', 'POMO4.SA', 'MRFG3.SA', 'BEEF3.SA', 
+                'MRVE3.SA', 'MULT3.SA', 'PCAR3.SA', 'PETR3.SA', 'PETR4.SA', 'RECV3.SA', 'PRIO3.SA', 'PETZ3.SA', 'PSSA3.SA', 'RADL3.SA', 'RAIZ4.SA', 
+                'RDOR3.SA', 'RAIL3.SA', 'SBSP3.SA', 'SANB11.SA', 'STBP3.SA', 'SMTO3.SA', 'CSNA3.SA', 'SLCE3.SA', 'SUZB3.SA', 'TAEE11.SA', 'VIVT3.SA', 
+                'TIMS3.SA', 'TOTS3.SA', 'UGPA3.SA', 'USIM5.SA', 'VALE3.SA', 'VAMO3.SA', 'VBBR3.SA', 'VIVA3.SA', 'WEGE3.SA', 'YDUQ3.SA']
 
-        # Criando um dicionário com chave como o nome da ação e valor como o nome da ação com '.SA'
-        acoes_dict = {acao: acao + '.SA' for acao in acoes}
+        acoes_dict = {acao: acao for acao in acoes}
 
         with st.form(key='form_acoes'):
             escolha = st.selectbox('Ações', list(acoes_dict.keys()))
             analisar = st.form_submit_button('Analisar')
             ticker = acoes_dict[escolha]
 
-if analisar:
-    data_inicial = ('1999-12-01')
-    data_final = ('2030-12-31')
-
-    # Baixa os dados do Yahoo Finance
-    dados = yf.download(ticker, start=data_inicial, end=data_final, interval="1mo")
-
-    if not dados.empty:
-        retornos = dados['Close'].pct_change().dropna()
-        # Adiciona colunas de ano e mês para organização
-        retornos = retornos.reset_index()
-        retornos['Year'] = retornos['Date'].dt.year
-        retornos['Month'] = retornos['Date'].dt.month
-
-        # Criar a tabela pivot sem média, apenas reorganizando os dados
-        tabela_retornos = retornos.pivot(index='Year', columns='Month', values=ticker)
-        tabela_retornos.columns = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
-                                    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-
-        # Criando Heatmap
-        fig, ax = plt.subplots(figsize=(12, 9))
-        cmap = sns.color_palette('RdYlGn', 15)
-        sns.heatmap(tabela_retornos, cmap=cmap, annot=True, fmt='.2%', center=0, vmax=0.025, vmin=-0.025, cbar=False,
-                    linewidths=0.5, xticklabels=True, yticklabels=True, ax=ax)
-        ax.set_title(f'Heatmap Retorno Mensal - {escolha}', fontsize=18)
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, verticalalignment='center', fontsize='12')
-        ax.set_xticklabels(ax.get_xticklabels(), fontsize='12')
-        plt.ylabel('')
-        st.pyplot(fig)
-
-        # Estatísticas
-        stats = pd.DataFrame(tabela_retornos.mean(), columns=['Média'])
-        stats['Mediana'] = tabela_retornos.median()
-        stats['Maior'] = tabela_retornos.max()
-        stats['Menor'] = tabela_retornos.min()
-        stats['Positivos'] = tabela_retornos.gt(0).sum() / tabela_retornos.count() # .gt(greater than) = Contagem de números maior que zero
-        stats['Negativos'] = tabela_retornos.le(0).sum() / tabela_retornos.count() # .le(less than) = Contagem de números menor que zero
-
-        # Stats_A
-        stats_a = stats[['Média', 'Mediana', 'Maior', 'Menor']].transpose()
-
-        fig, ax = plt.subplots(figsize=(12, 2))
-        sns.heatmap(stats_a, cmap=cmap, annot=True, fmt='.2%', center=0, vmax=0.025, vmin=-0.025, cbar=False,
-                    linewidths=0.5, xticklabels=True, yticklabels=True, ax=ax)
-        st.pyplot(fig)
-
-        # Stats_B
-        stats_b = stats[['Positivos', 'Negativos']].transpose()
-
-        fig, ax = plt.subplots(figsize=(12, 1))
-        sns.heatmap(stats_b, cmap=sns.color_palette("magma", as_cmap=True), annot=True, fmt='.2%', center=0, vmax=0.025, vmin=-0.025, cbar=False,
-                    linewidths=0.5, xticklabels=True, yticklabels=True, ax=ax)
-        st.pyplot(fig)
-
-    else:
-        st.error("Erro ao buscar os dados. Verifique o ticker ou tente novamente mais tarde.")
