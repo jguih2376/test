@@ -7,12 +7,36 @@ st.markdown('---')
 
 # Função para carregar os dados usando yfinance
 @st.cache_data
-def carregar_dados(tickers, data_inicio, data_fim):
+
+
+def carregar_dados(tickers, data_inicio, data_fim, tipo='acoes'):
     dados = {}
-    for ticker in tickers:
-        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
-        dados[ticker] = hist
+    if tipo == 'acoes':
+        for ticker in tickers:
+            hist = yf.Ticker(ticker + '.SA').history(start=data_inicio, end=data_fim)['Close']
+            dados[ticker] = hist
+    elif tipo == 'indices' or tipo == 'commodities':
+        for ticker in tickers:
+            hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
+            dados[ticker] = hist
     return pd.DataFrame(dados)
+
+# Exemplo de uso
+tickers_acoes = ['PETR4', 'VALE3']
+tickers_indices = ['^BVSP']  # Exemplo de índice Bovespa
+tickers_commodities = ['GC=F']  # Exemplo de ouro
+
+data_inicio = '2022-01-01'
+data_fim = '2022-12-31'
+
+df_acoes = carregar_dados(tickers_acoes, data_inicio, data_fim, tipo='acoes')
+df_indices = carregar_dados(tickers_indices, data_inicio, data_fim, tipo='indices')
+df_commodities = carregar_dados(tickers_commodities, data_inicio, data_fim, tipo='commodities')
+
+print(df_acoes)
+print(df_indices)
+print(df_commodities)
+
 
 def calcular_performance(dados):
     if not dados.empty:
@@ -71,21 +95,13 @@ tickers_commodities = {
     'Soja': 'ZS=F',
     'Café': 'KC=F'
 }
-tickers_acoes = {
-    'ITUB4': 'ITUB4.SA',
-    'BBAS3': 'BBAS3.SA',
-    'ABEV3': 'ABEV3.SA',
-    'WEGE3': 'WEGE3.SA',
-    'RENT3': 'RENT3.SA',
-    'JBSS3': 'JBSS3.SA',
-    'ELET3': 'ELET3.SA'
-}
+tickers_acoes = ['ITUB4', 'BBAS3', 'ABEV3', 'WEGE3', 'RENT3', 'JBSS3', 'ELET3']
 
 # Dicionário de categorias
 categorias = {
     'Índices': list(tickers_indices.keys()),
     'Commodities': list(tickers_commodities.keys()),
-    'Ações': list(tickers_acoes.keys())
+    'Ações': tickers_acoes
 }
 
 # Seleção de categoria
@@ -100,7 +116,7 @@ if categoria_selecionada == 'Índices':
 elif categoria_selecionada == 'Commodities':
     tickers = [tickers_commodities[ativo] for ativo in ativos_selecionados]
 else:
-    tickers = [tickers_acoes[ativo] for ativo in ativos_selecionados]
+    tickers = ativos_selecionados
 
 dados = carregar_dados(tickers, data_inicio, data_fim)
 
