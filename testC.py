@@ -11,32 +11,11 @@ st.markdown('---')
 
 def carregar_dados(tickers, data_inicio, data_fim, tipo='acoes'):
     dados = {}
-    if tipo == 'acoes':
-        for ticker in tickers:
-            hist = yf.Ticker(ticker + '.SA').history(start=data_inicio, end=data_fim)['Close']
-            dados[ticker] = hist
-    elif tipo == 'indices' or tipo == 'commodities':
-        for ticker in tickers:
+    for ticker in tickers:
             hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
             dados[ticker] = hist
+
     return pd.DataFrame(dados)
-
-# Exemplo de uso
-tickers_acoes = ['PETR4', 'VALE3']
-tickers_indices = ['^BVSP']  # Exemplo de índice Bovespa
-tickers_commodities = ['GC=F']  # Exemplo de ouro
-
-data_inicio = '2022-01-01'
-data_fim = '2022-12-31'
-
-df_acoes = carregar_dados(tickers_acoes, data_inicio, data_fim, tipo='acoes')
-df_indices = carregar_dados(tickers_indices, data_inicio, data_fim, tipo='indices')
-df_commodities = carregar_dados(tickers_commodities, data_inicio, data_fim, tipo='commodities')
-
-print(df_acoes)
-print(df_indices)
-print(df_commodities)
-
 
 def calcular_performance(dados):
     if not dados.empty:
@@ -73,7 +52,7 @@ data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date
 data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
 
 # Listas de tickers para cada categoria
-tickers_indices = {
+indices = {
     'IBOV': '^BVSP',
     'S&P500': '^GSPC',     
     'NASDAQ': '^IXIC',
@@ -84,7 +63,7 @@ tickers_indices = {
     'Nikkei225': '^N225',
     'Merval': '^MERV'
 }
-tickers_commodities = {
+commodities = {
     'Ouro': 'GC=F',
     'Prata': 'SI=F',
     'Platinum': 'PL=F',     
@@ -95,13 +74,14 @@ tickers_commodities = {
     'Soja': 'ZS=F',
     'Café': 'KC=F'
 }
-tickers_acoes = ['ITUB4', 'BBAS3', 'ABEV3', 'WEGE3', 'RENT3', 'JBSS3', 'ELET3']
+acoes = ['ITUB4', 'BBAS3', 'ABEV3', 'WEGE3', 'RENT3', 'JBSS3', 'ELET3']
+acoes_dict =  {acao: acao + '.SA' for acao in acoes}
 
 # Dicionário de categorias
 categorias = {
-    'Índices': list(tickers_indices.keys()),
-    'Commodities': list(tickers_commodities.keys()),
-    'Ações': tickers_acoes
+    'Índices': list(indices.keys()),
+    'Commodities': list(commodities.keys()),
+    'Ações': list(acoes_dict.keys()),
 }
 
 # Seleção de categoria
@@ -112,9 +92,9 @@ ativos_selecionados = st.multiselect('Selecione:', options=categorias[categoria_
 
 # Carregar os dados
 if categoria_selecionada == 'Índices':
-    tickers = [tickers_indices[ativo] for ativo in ativos_selecionados]
+    tickers = [indices[ativo] for ativo in ativos_selecionados]
 elif categoria_selecionada == 'Commodities':
-    tickers = [tickers_commodities[ativo] for ativo in ativos_selecionados]
+    tickers = [commodities[ativo] for ativo in ativos_selecionados]
 else:
     tickers = ativos_selecionados
 
