@@ -10,7 +10,7 @@ st.markdown('---')
 def carregar_dados(tickers, data_inicio, data_fim):
     dados = {}
     for ticker in tickers:
-        hist = yf.Ticker(ticker + '.SA').history(start=data_inicio, end=data_fim)['Close']
+        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
         dados[ticker] = hist
     return pd.DataFrame(dados)
 
@@ -71,13 +71,21 @@ tickers_commodities = {
     'Soja': 'ZS=F',
     'Café': 'KC=F'
 }
-tickers_acoes = ['ITUB4', 'BBAS3', 'ABEV3', 'WEGE3', 'RENT3', 'JBSS3', 'ELET3']
+tickers_acoes = {
+    'ITUB4': 'ITUB4.SA',
+    'BBAS3': 'BBAS3.SA',
+    'ABEV3': 'ABEV3.SA',
+    'WEGE3': 'WEGE3.SA',
+    'RENT3': 'RENT3.SA',
+    'JBSS3': 'JBSS3.SA',
+    'ELET3': 'ELET3.SA'
+}
 
 # Dicionário de categorias
 categorias = {
     'Índices': list(tickers_indices.keys()),
     'Commodities': list(tickers_commodities.keys()),
-    'Ações': tickers_acoes
+    'Ações': list(tickers_acoes.keys())
 }
 
 # Seleção de categoria
@@ -92,7 +100,7 @@ if categoria_selecionada == 'Índices':
 elif categoria_selecionada == 'Commodities':
     tickers = [tickers_commodities[ativo] for ativo in ativos_selecionados]
 else:
-    tickers = ativos_selecionados
+    tickers = [tickers_acoes[ativo] for ativo in ativos_selecionados]
 
 dados = carregar_dados(tickers, data_inicio, data_fim)
 
