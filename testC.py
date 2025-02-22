@@ -49,12 +49,17 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
             showlegend=False
         ))
 
+    # Ajustando a data do eixo X para intervalo de 1 ano
     fig.update_layout(
         title=f"{'Desempenho Relativo (%)' if normalizado else 'Preço dos Ativos'}",
         xaxis_title='Data',
         yaxis_title='Performance (%)' if normalizado else 'Preço',
-        xaxis=dict(tickformat='%m/%Y'),
-        legend_title='Ativo',
+        xaxis=dict(
+            tickformat='%Y',  # Exibe o ano
+            tickmode='array',  # Define um modo de marcação personalizada
+            tickvals=dados.index[::252],  # Marca um ponto a cada 252 dias (aproximadamente 1 ano de pregão)
+        ),
+        legend_title='Ativos',
         legend_orientation='h',
         plot_bgcolor='rgba(211, 211, 211, 0.15)',
         height=600,
@@ -104,7 +109,7 @@ with col1:
         legenda_dict = {v: k for k, v in acoes_dict.items()}  # Inverte o dicionário para a legenda
 
 with col2:
-    data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
+    data_inicio = st.date_input('Data de início', pd.to_datetime('2020-01-01').date(), format='DD/MM/YYYY')
 with col3:
     data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
 
