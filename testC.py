@@ -23,13 +23,14 @@ def calcular_performance(dados):
         return (dados / dados.iloc[0] - 1) * 100
     return dados
 
-def criar_grafico(ativos_selecionados, dados, normalizado=True):
+def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=None):
     fig = go.Figure()
     for ativo in ativos_selecionados:
+        nome_ativo = legenda_dict.get(ativo, ativo)  # Usa a chave do dicionário para o nome
         fig.add_trace(go.Scatter(
             x=dados.index,
             y=calcular_performance(dados)[ativo] if normalizado else dados[ativo],
-            name=ativo,
+            name=nome_ativo,  # Utiliza a chave do dicionário na legenda
             line=dict(width=1)
         ))
 
@@ -73,14 +74,17 @@ with col1:
     if opcao1 == 'Índices':
         escolha = st.multiselect('Índice', list(indices.keys()), placeholder='Ativos')
         ticker = [indices[indice] for indice in escolha]
+        legenda_dict = indices  # Usando o dicionário de índices para legenda
 
     elif opcao1 == 'Commodities':
         escolha = st.multiselect('Commodities', list(commodities.keys()), placeholder='Ativos')
         ticker = [commodities[commodity] for commodity in escolha]
+        legenda_dict = commodities  # Usando o dicionário de commodities para legenda
 
     elif opcao1 == 'Ações':
         escolha = st.multiselect('Ações', list(acoes_dict.keys()), placeholder='Ativos')
         ticker = [acoes_dict[acao] for acao in escolha]
+        legenda_dict = acoes_dict  # Usando o dicionário de ações para legenda
 
 with col2:
     data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
@@ -94,7 +98,7 @@ normalizado = st.checkbox("Exibir desempenho percentual", value=True)
 if ticker:
     dados = carregar_dados(ticker, data_inicio, data_fim)
     if not dados.empty:
-        fig = criar_grafico(ticker, dados, normalizado)
+        fig = criar_grafico(ticker, dados, normalizado, legenda_dict)
         st.plotly_chart(fig)
     else:
         st.warning("Nenhum dado disponível para os tickers selecionados.")
