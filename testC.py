@@ -35,6 +35,7 @@ def criar_grafico(ativos_selecionados, dados):
                 name=ativo,
                 line=dict(width=1)
             ))
+    legend_names = {ativos_selecionados[i]: list(dados.columns)[i] for i in range(len(ativos_selecionados))}
     fig.update_layout(
         title='Desempenho Relativo dos Ativos (%)',
         xaxis_title='Data',
@@ -43,7 +44,9 @@ def criar_grafico(ativos_selecionados, dados):
         legend_title='Ativo',
         legend_orientation='h',
         plot_bgcolor='rgba(211, 211, 211, 0.15)',
-        height=600
+        legend=dict(traceorder='normal',
+                    itemsizing='trace',
+                    font=dict(size=10))
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
     return fig
