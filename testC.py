@@ -69,33 +69,28 @@ acoes_dict = {acao: acao + '.SA' for acao in acoes}
 if opcao == 'Índices':
     with st.form(key='form_indice'):
         escolha = st.multiselect('Índice', list(indices.keys()))
-        analisar = st.form_submit_button('Analisar')
         ticker = [indices[indice] for indice in escolha]
 
 elif opcao == 'Commodities':
     with st.form(key='form_commodities'):
         escolha = st.multiselect('Commodities', list(commodities.keys()))
-        analisar = st.form_submit_button('Analisar')
         ticker = [commodities[commodity] for commodity in escolha]
 
 elif opcao == 'Ações':
     with st.form(key='form_acoes'):
         escolha = st.multiselect('Ações', list(acoes_dict.keys()))
-        analisar = st.form_submit_button('Analisar')
         ticker = [acoes_dict[acao] for acao in escolha]
 
-# Se o botão Analisar for pressionado
-if analisar:
-    data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
-    data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
-    
-    # Carregar dados reais
-    dados = carregar_dados(ticker, data_inicio, data_fim)
-    dados_performance = calcular_performance(dados)
-    
-    # Verificar se os dados estão disponíveis e criar gráfico
-    if not dados_performance.empty:
-        fig = criar_grafico(ticker, dados_performance)
-        st.plotly_chart(fig)
-    else:
-        st.write("Nenhum dado encontrado para os tickers selecionados.")
+# Carregar dados reais
+data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
+data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
+
+dados = carregar_dados(ticker, data_inicio, data_fim)
+dados_performance = calcular_performance(dados)
+
+# Verificar se os dados estão disponíveis e criar gráfico
+if not dados_performance.empty:
+    fig = criar_grafico(escolha, dados_performance)  # Usando as chaves na legenda
+    st.plotly_chart(fig)
+else:
+    st.write("Nenhum dado encontrado para os tickers selecionados.")
