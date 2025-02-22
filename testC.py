@@ -71,27 +71,28 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
 
 st.subheader('Desempenho Relativo')
 
-opcao1 = st.radio('Selecione', ['Índices', 'Ações', 'Commodities'])
+with st.form(key='formulario_dados'):
+    opcao1 = st.selectbox('Selecione', ['Índices', 'Ações', 'Commodities'])
 
-indices = {'IBOV': '^BVSP','EWZ':'EWZ', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^FTSE', 'DAX': '^GDAXI', 
-        'CAC40': '^FCHI', 'SSE Composite': '000001.SS', 'Nikkei225': '^N225', 'Merval': '^MERV'}
+    indices = {'IBOV': '^BVSP','EWZ':'EWZ', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^FTSE', 'DAX': '^GDAXI', 
+            'CAC40': '^FCHI', 'SSE Composite': '000001.SS', 'Nikkei225': '^N225', 'Merval': '^MERV'}
 
-commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F', 
-            'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
+    commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F', 
+                'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
 
-acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
-        "RAIZ4","PRIO3", "VBBR3", "CSAN3", "UGPA3",  
-        "BPAC11", "SANB11", "GGBR4", "CSNA3", "USIM5",  
-        "JBSS3", "ABEV3", "MRFG3", "BRFS3", "BEEF3",  
-        "ELET3", "NEOE3", "CPFE3", "ENGI11", "EQTL3",  
-        "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3", 
-        "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", 
-        "WEGE3", "B3SA3"]
+    acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
+            "RAIZ4","PRIO3", "VBBR3", "CSAN3", "UGPA3",  
+            "BPAC11", "SANB11", "GGBR4", "CSNA3", "USIM5",  
+            "JBSS3", "ABEV3", "MRFG3", "BRFS3", "BEEF3",  
+            "ELET3", "NEOE3", "CPFE3", "ENGI11", "EQTL3",  
+            "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3", 
+            "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", 
+            "WEGE3", "B3SA3"]
 
-acoes_dict = {acao: acao + '.SA' for acao in acoes}
+    acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
 # Adicionar o formulário
-with st.form(key='formulario_dados'):
+
     col1, col2, col3 = st.columns([3, 1, 1])
 
     with col1:
