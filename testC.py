@@ -44,7 +44,7 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
             x=[dados.index[-1]],  # Último ponto do gráfico
             y=[y_data.iloc[-1]],  # Último valor
             mode='markers',
-            marker=dict(size=3, color='red', symbol='circle'),
+            marker=dict(size=5, color='red', symbol='circle'),
             name=f'{nome_ativo} - Último Preço'
         ))
 
