@@ -5,21 +5,25 @@ import plotly.graph_objects as go
 
 st.markdown('---')
 
+
 # Função para carregar os dados usando yfinance
 @st.cache_data
 def carregar_dados(tickers, data_inicio, data_fim):
+    # Função para carregar os dados usando yfinance
     dados = {}
     for ticker in tickers:
-        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
+        hist = yf.Ticker(ticker + '.SA').history(start=data_inicio, end=data_fim)['Close']
         dados[ticker] = hist
     return pd.DataFrame(dados)
 
 def calcular_performance(dados):
+    # Função para calcular a performance em percentual
     if not dados.empty:
         return (dados / dados.iloc[0] - 1) * 100
     return dados
 
 def criar_grafico(ativos_selecionados, dados):
+    # Função para criar o gráfico
     fig = go.Figure()
     for ativo in ativos_selecionados:
         fig.add_trace(go.Scatter(
@@ -63,33 +67,46 @@ acoes = ['ALOS3', 'ABEV3', 'ASAI3', 'AURE3', 'AMOB3', 'AZUL4', 'AZZA3', 'B3SA3',
         'RDOR3', 'RAIL3', 'SBSP3', 'SANB11', 'STBP3', 'SMTO3', 'CSNA3', 'SLCE3', 'SUZB3', 'TAEE11', 'VIVT3', 
         'TIMS3', 'TOTS3', 'UGPA3', 'USIM5', 'VALE3', 'VAMO3', 'VBBR3', 'VIVA3', 'WEGE3', 'YDUQ3']
 
+# Criando um dicionário de ações
 acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
 # Exibindo o formulário de acordo com a seleção do usuário
-escolha = []
-ticker = []
-if opcao == 'Índices':
-    escolha = st.multiselect('Índice', list(indices.keys()))
-    ticker = [indices[indice] for indice in escolha]
+# Criando um dicionário de ações
+acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
-elif opcao == 'Commodities':
-    escolha = st.multiselect('Commodities', list(commodities.keys()))
-    ticker = [commodities[commodity] for commodity in escolha]
+# Exibindo o formulário de acordo com a seleção do usuário
+col1,col2,col3 = st.columns([4,1,1])
+with col1:
+    if opcao == 'Índices':
 
-elif opcao == 'Ações':
-    escolha = st.multiselect('Ações', list(acoes_dict.keys()))
-    ticker = [acoes_dict[acao] for acao in escolha]
+        escolha = st.multiselect('Índice', list(indices.keys()),placeholder='Ativos')
 
-# Carregar dados reais
-data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
-data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
+        ticker = [indices[indice] for indice in escolha]
 
-dados = carregar_dados(ticker, data_inicio, data_fim)
-dados_performance = calcular_performance(dados)
+    elif opcao == 'Commodities':
 
-# Verificar se os dados estão disponíveis e criar gráfico
-if not dados_performance.empty:
-    fig = criar_grafico(escolha, dados_performance)  # Usando as chaves na legenda
-    st.plotly_chart(fig)
-else:
-    st.write("Nenhum dado encontrado para os tickers selecionados.")
+        escolha = st.multiselect('Commodities', list(commodities.keys()),placeholder='Ativos')
+
+        ticker = [commodities[commodity] for commodity in escolha]
+
+    elif opcao == 'Ações':
+
+        escolha = st.multiselect('Ações', list(acoes_dict.keys()),placeholder='Ativos')
+
+        ticker = [acoes_dict[acao] for acao in escolha]
+
+
+with col2:
+    data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
+with col3:  
+    data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
+
+
+# Verificando se os tickers existem nos dados antes de criar o gráfico
+dados = pd.DataFrame() # Aqui você deve carregar seus dados reais
+for ativo in ticker:
+    if ativo in dados.columns:
+        fig = criar_grafico(ticker, dados)
+    else:
+        st.write(f"Ticker {ativo} não encontrado nos dados.")
+    
