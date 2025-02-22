@@ -66,20 +66,19 @@ acoes = ['ALOS3', 'ABEV3', 'ASAI3', 'AURE3', 'AMOB3', 'AZUL4', 'AZZA3', 'B3SA3',
 acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
 # Exibindo o formulário de acordo com a seleção do usuário
+escolha = []
+ticker = []
 if opcao == 'Índices':
-    with st.form(key='form_indice'):
-        escolha = st.multiselect('Índice', list(indices.keys()))
-        ticker = [indices[indice] for indice in escolha]
+    escolha = st.multiselect('Índice', list(indices.keys()))
+    ticker = [indices[indice] for indice in escolha]
 
 elif opcao == 'Commodities':
-    with st.form(key='form_commodities'):
-        escolha = st.multiselect('Commodities', list(commodities.keys()))
-        ticker = [commodities[commodity] for commodity in escolha]
+    escolha = st.multiselect('Commodities', list(commodities.keys()))
+    ticker = [commodities[commodity] for commodity in escolha]
 
 elif opcao == 'Ações':
-    with st.form(key='form_acoes'):
-        escolha = st.multiselect('Ações', list(acoes_dict.keys()))
-        ticker = [acoes_dict[acao] for acao in escolha]
+    escolha = st.multiselect('Ações', list(acoes_dict.keys()))
+    ticker = [acoes_dict[acao] for acao in escolha]
 
 # Carregar dados reais
 data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
