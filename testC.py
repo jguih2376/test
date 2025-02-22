@@ -91,8 +91,6 @@ with st.form(key='formulario_dados'):
 
     acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
-# Adicionar o formulário
-
     col1, col2, col3 = st.columns([3, 1, 1])
 
     with col1:
@@ -116,36 +114,20 @@ with st.form(key='formulario_dados'):
     with col3:
         data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
 
-    # Botão de submit para o formulário
     submit_button = st.form_submit_button(label='Carregar Dados')
 
-# O processamento de dados só acontece após o clique no botão de submit
+# Verificar se nenhum ativo foi selecionado
 if submit_button:
-    # Opção para visualizar valores normalizados ou brutos
-    normalizado = st.checkbox("Exibir desempenho percentual", value=True)
+    if not ticker:
+        st.error("Por favor, selecione pelo menos um ativo antes de continuar.")  # Exibe erro se nenhum ativo for selecionado
+    else:
+        # Opção para visualizar valores normalizados ou brutos
+        normalizado = st.checkbox("Exibir desempenho percentual", value=True)
 
-    # Carregar os dados reais
-    if ticker:
+        # Carregar os dados reais
         dados = carregar_dados(ticker, data_inicio, data_fim)
         if not dados.empty:
             fig = criar_grafico(ticker, dados, normalizado, legenda_dict)
             st.plotly_chart(fig)
         else:
             st.warning("Nenhum dado disponível para os tickers selecionados.")
-    else:
-        st.info("Selecione pelo menos um ativo para exibir os dados.")
-
-
-# Opção para visualizar valores normalizados ou brutos
-normalizado = st.checkbox("Exibir desempenho percentual", value=True)
-
-# Carregar os dados reais
-if ticker:
-    dados = carregar_dados(ticker, data_inicio, data_fim)
-    if not dados.empty:
-        fig = criar_grafico(ticker, dados, normalizado, legenda_dict)
-        st.plotly_chart(fig)
-    else:
-        st.warning("Nenhum dado disponível para os tickers selecionados.")
-else:
-    st.info("Selecione pelo menos um ativo para exibir os dados.")
