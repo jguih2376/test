@@ -42,7 +42,7 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
         legend_title='Ativo',
         legend_orientation='h',
         plot_bgcolor='rgba(211, 211, 211, 0.15)',
-        heigth=600
+        height=600
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
 
