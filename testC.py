@@ -81,9 +81,9 @@ with col1:
         legenda_dict = {v: k for k, v in commodities.items()}  # Inverte o dicionário para a legenda
 
     elif opcao1 == 'Ações':
-        escolha = st.multiselect('Ações', list(acoes.keys()), placeholder='Ativos')
+        escolha = st.multiselect('Ações', list(acoes_dict.keys()), placeholder='Ativos')
         ticker = [acoes[acao] for acao in escolha]
-        legenda_dict = {v: k for k, v in acoes.items()}  # Inverte o dicionário para a legenda
+        legenda_dict = {v: k for k, v in acoes_dict.items()}  # Inverte o dicionário para a legenda
 
 with col2:
     data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
