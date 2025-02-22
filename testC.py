@@ -1,29 +1,24 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import yfinance as yf
+import seaborn as sns
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
-st.markdown('---')
-
-
-# Função para carregar os dados usando yfinance
-@st.cache_data
 def carregar_dados(tickers, data_inicio, data_fim):
-    # Função para carregar os dados usando yfinance
     dados = {}
     for ticker in tickers:
-        hist = yf.Ticker(ticker + '.SA').history(start=data_inicio, end=data_fim)['Close']
-        dados[ticker] = hist
+        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
+        if not hist.empty:
+            dados[ticker] = hist
     return pd.DataFrame(dados)
 
 def calcular_performance(dados):
-    # Função para calcular a performance em percentual
     if not dados.empty:
         return (dados / dados.iloc[0] - 1) * 100
     return dados
 
 def criar_grafico(ativos_selecionados, dados):
-    # Função para criar o gráfico
     fig = go.Figure()
     for ativo in ativos_selecionados:
         fig.add_trace(go.Scatter(
@@ -32,7 +27,6 @@ def criar_grafico(ativos_selecionados, dados):
             name=ativo,
             line=dict(width=1)
         ))
-
     fig.update_layout(
         title='Desempenho Relativo dos Ativos (%)',
         xaxis_title='Data',
@@ -40,73 +34,40 @@ def criar_grafico(ativos_selecionados, dados):
         xaxis=dict(tickformat='%m/%Y'),
         legend_title='Ativo',
         legend_orientation='h',
-        plot_bgcolor='rgba(211, 211, 211, 0.15)'  # Cor de fundo cinza claro   
+        plot_bgcolor='rgba(211, 211, 211, 0.15)'
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
-
     return fig
 
-st.subheader('Desempenho Relativo')
+def app():
+    st.title('Análise Histórica e Desempenho Relativo')
 
-# Opções do usuário
-opcao = st.radio('Selecione', ['Índices', 'Ações', 'Commodities'])
+    opcao = st.radio('Selecione', ['Índices', 'Ações', 'Commodities'])
 
-# Dicionários de índices, commodities e ações
-indices = {'IBOV': '^BVSP', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^FTSE', 'DAX': '^GDAXI', 
-        'CAC40': '^FCHI', 'SSE Composite': '000001.SS', 'Nikkei225': '^N225', 'Merval': '^MERV'}
+    ativos = {
+        'Índices': {'IBOV': '^BVSP', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^FTSE', 'DAX': '^GDAXI'},
+        'Commodities': {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F'},
+        'Ações': {acao: acao + '.SA' for acao in ['ALOS3', 'ABEV3', 'PETR4', 'VALE3', 'WEGE3']}
+    }
 
-commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F', 
-            'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
+    escolha = st.multiselect(f'Selecione {opcao}', list(ativos[opcao].keys()), placeholder='Escolha os ativos')
+    tickers = [ativos[opcao][e] for e in escolha]
 
-acoes = ['ALOS3', 'ABEV3', 'ASAI3', 'AURE3', 'AMOB3', 'AZUL4', 'AZZA3', 'B3SA3', 'BBSE3', 'BBDC3', 'BBDC4', 
-        'BRAP4', 'BBAS3', 'BRKM5', 'BRAV3', 'BRFS3', 'BPAC11', 'CXSE3', 'CRFB3', 'CCRO3', 'CMIG4', 'COGN3', 
-        'CPLE6', 'CSAN3', 'CPFE3', 'CMIN3', 'CVCB3', 'CYRE3', 'ELET3', 'ELET6', 'EMBR3', 'ENGI11', 'ENEV3', 
-        'EGIE3', 'EQTL3', 'FLRY3', 'GGBR4', 'GOAU4', 'NTCO3', 'HAPV3', 'HYPE3', 'IGTI11', 'IRBR3', 'ISAE4', 
-        'ITSA4', 'ITUB4', 'JBSS3', 'KLBN11', 'RENT3', 'LREN3', 'LWSA3', 'MGLU3', 'POMO4', 'MRFG3', 'BEEF3', 
-        'MRVE3', 'MULT3', 'PCAR3', 'PETR3', 'PETR4', 'RECV3', 'PRIO3', 'PETZ3', 'PSSA3', 'RADL3', 'RAIZ4', 
-        'RDOR3', 'RAIL3', 'SBSP3', 'SANB11', 'STBP3', 'SMTO3', 'CSNA3', 'SLCE3', 'SUZB3', 'TAEE11', 'VIVT3', 
-        'TIMS3', 'TOTS3', 'UGPA3', 'USIM5', 'VALE3', 'VAMO3', 'VBBR3', 'VIVA3', 'WEGE3', 'YDUQ3']
+    col1, col2 = st.columns(2)
+    with col1:
+        data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
+    with col2:
+        data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
 
-# Criando um dicionário de ações
-acoes_dict = {acao: acao + '.SA' for acao in acoes}
-
-# Exibindo o formulário de acordo com a seleção do usuário
-# Criando um dicionário de ações
-acoes_dict = {acao: acao + '.SA' for acao in acoes}
-
-# Exibindo o formulário de acordo com a seleção do usuário
-col1,col2,col3 = st.columns([4,1,1])
-with col1:
-    if opcao == 'Índices':
-
-        escolha = st.multiselect('Índice', list(indices.keys()),placeholder='Ativos')
-
-        ticker = [indices[indice] for indice in escolha]
-
-    elif opcao == 'Commodities':
-
-        escolha = st.multiselect('Commodities', list(commodities.keys()),placeholder='Ativos')
-
-        ticker = [commodities[commodity] for commodity in escolha]
-
-    elif opcao == 'Ações':
-
-        escolha = st.multiselect('Ações', list(acoes_dict.keys()),placeholder='Ativos')
-
-        ticker = [acoes_dict[acao] for acao in escolha]
-
-
-with col2:
-    data_inicio = st.date_input('Data de início', pd.to_datetime('2015-01-01').date(), format='DD/MM/YYYY')
-with col3:  
-    data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
-
-
-# Verificando se os tickers existem nos dados antes de criar o gráfico
-dados = pd.DataFrame() # Aqui você deve carregar seus dados reais
-for ativo in ticker:
-    if ativo in dados.columns:
-        fig = criar_grafico(ticker, dados)
+    if tickers:
+        dados = carregar_dados(tickers, data_inicio, data_fim)
+        if not dados.empty:
+            fig = criar_grafico(tickers, calcular_performance(dados))
+            st.plotly_chart(fig)
+        else:
+            st.error('Nenhum dado disponível para os ativos selecionados.')
     else:
-        st.write(f"Ticker {ativo} não encontrado nos dados.")
-    
+        st.info('Selecione pelo menos um ativo para análise.')
+
+if __name__ == '__main__':
+    app()
