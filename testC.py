@@ -44,7 +44,7 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
             x=[dados.index[-1]],  # Último ponto do gráfico
             y=[y_data.iloc[-1]],  # Último valor
             mode='markers',
-            marker=dict(size=10, color='red', symbol='circle'),
+            marker=dict(size=3, color='red', symbol='circle'),
             name=f'{nome_ativo} - Último Preço'
         ))
 
@@ -57,7 +57,7 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
         legend_orientation='h',
         plot_bgcolor='rgba(211, 211, 211, 0.15)',
         height=600,
-        margin=dict(r=50)  # Ajusta a margem à direita
+        margin=dict(r=10)  # Ajusta a margem à direita
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
 
