@@ -27,11 +27,25 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
     fig = go.Figure()
     for ativo in ativos_selecionados:
         nome_ativo = legenda_dict.get(ativo, ativo)  # Usa a chave do dicionário para o nome
+        # Dados normalizados ou brutos
+        y_data = calcular_performance(dados)[ativo] if normalizado else dados[ativo]
+        
+        # Adicionando linha do gráfico
         fig.add_trace(go.Scatter(
             x=dados.index,
-            y=calcular_performance(dados)[ativo] if normalizado else dados[ativo],
+            y=y_data,
             name=nome_ativo,  # Utiliza a chave do dicionário na legenda
+            mode='lines',  # Apenas a linha
             line=dict(width=1)
+        ))
+        
+        # Adicionando bolinha no último ponto
+        fig.add_trace(go.Scatter(
+            x=[dados.index[-1]],  # Último ponto do gráfico
+            y=[y_data.iloc[-1]],  # Último valor
+            mode='markers',
+            marker=dict(size=10, color='red', symbol='circle'),
+            name=f'{nome_ativo} - Último Preço'
         ))
 
     fig.update_layout(
@@ -42,7 +56,8 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
         legend_title='Ativo',
         legend_orientation='h',
         plot_bgcolor='rgba(211, 211, 211, 0.15)',
-        height=600
+        height=600,
+        margin=dict(r=50)  # Ajusta a margem à direita
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
 
@@ -58,7 +73,6 @@ indices = {'IBOV': '^BVSP', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^F
 commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F', 
             'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
 
-
 acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
         "RAIZ4","PRIO3", "VBBR3", "CSAN3", "UGPA3",  
         "BPAC11", "SANB11", "GGBR4", "CSNA3", "USIM5",  
@@ -67,8 +81,6 @@ acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
         "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3", 
         "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", 
         "WEGE3", "B3SA3"]
-
-
 
 acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
