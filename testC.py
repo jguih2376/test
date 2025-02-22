@@ -57,15 +57,15 @@ indices = {'IBOV': '^BVSP', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^F
 commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F', 
             'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
 
-acoes = {
-    "Petrobras ON": "PETR3.SA", "Petrobras PN": "PETR4.SA", "Vale": "VALE3.SA", 
-    "Itaú Unibanco ON": "ITUB3.SA", "Itaú Unibanco PN": "ITUB4.SA", "Bradesco ON": "BBDC3.SA", 
-    "Bradesco PN": "BBDC4.SA", "Ambev": "ABEV3.SA", "Banco do Brasil": "BBAS3.SA", 
-    "B3": "B3SA3.SA", "Santander Brasil": "SANB11.SA", "Weg": "WEGE3.SA", 
-    "BTG Pactual": "BPAC11.SA", "Suzano": "SUZB3.SA", "Gerdau": "GGBR4.SA", 
-    "Eletrobras ON": "ELET3.SA", "Eletrobras PN": "ELET6.SA", "Localiza": "RENT3.SA", 
-    "JBS": "JBSS3.SA", "Magazine Luiza": "MGLU3.SA"
-}
+
+acoes = [
+    "PETR3", "PETR4", "VALE3", "ITUB3", "ITUB4", "BBDC3", "BBDC4", 
+    "ABEV3", "BBAS3", "B3SA3", "SANB11", "WEGE3", "BPAC11", "SUZB3", 
+    "GGBR4", "ELET3", "ELET6", "RENT3", "JBSS3", "MGLU3"
+]
+
+
+acoes_dict = {acao: acao + '.SA' for acao in acoes}
 
 col1, col2, col3 = st.columns([3, 1, 1])
 
