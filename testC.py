@@ -90,6 +90,7 @@ acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
 
 
 acoes_dict = {acao: acao + '.SA' for acao in acoes}
+indices_dict = {indice:indice + '.SA' for indice in indices }
 
 col1, col2, col3 = st.columns([3, 1, 1])
 
