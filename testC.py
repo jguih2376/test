@@ -71,9 +71,10 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
 
 st.subheader('Desempenho Relativo')
 
-opcao1 = st.radio('Selecione', ['Índices Setoriais', 'Ações', 'Commodities'])
+opcao1 = st.radio('Selecione', ['Índices', 'Ações', 'Commodities'])
 
-indices = {'INDX','ICON','IMOB','IFNC','IMAT','UTIL','IEEX','IFIX','ITAG','IDIV'}
+indices = {'IBOV': '^BVSP', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^FTSE', 'DAX': '^GDAXI', 
+        'CAC40': '^FCHI', 'SSE Composite': '000001.SS', 'Nikkei225': '^N225', 'Merval': '^MERV'}
 
 commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil': 'CL=F', 
             'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
@@ -87,18 +88,15 @@ acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
         "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", 
         "WEGE3", "B3SA3"]
 
-
-
 acoes_dict = {acao: acao + '.SA' for acao in acoes}
-indices_dict = {indice:indice + '.SA' for indice in indices }
 
 col1, col2, col3 = st.columns([3, 1, 1])
 
 with col1:
-    if opcao1 == 'Índices Setoriais':
-        escolha = st.multiselect('Índices Setoriais', list(indices_dict.keys()), placeholder='Ativos')
-        ticker = [indices_dict[indice] for indice in escolha]
-        legenda_dict = {v: k for k, v in indices_dict.items()}  # Inverte o dicionário para a legenda
+    if opcao1 == 'Índices':
+        escolha = st.multiselect('Índice', list(indices.keys()), placeholder='Ativos')
+        ticker = [indices[indice] for indice in escolha]
+        legenda_dict = {v: k for k, v in indices.items()}  # Inverte o dicionário para a legenda
 
     elif opcao1 == 'Commodities':
         escolha = st.multiselect('Commodities', list(commodities.keys()), placeholder='Ativos')
