@@ -42,7 +42,8 @@ def criar_grafico(ativos_selecionados, dados):
         xaxis=dict(tickformat='%m/%Y'),
         legend_title='Ativo',
         legend_orientation='h',
-        plot_bgcolor='rgba(211, 211, 211, 0.15)'
+        plot_bgcolor='rgba(211, 211, 211, 0.15)',
+        height=600
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
     return fig
