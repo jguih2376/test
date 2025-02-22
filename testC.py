@@ -41,7 +41,8 @@ def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=Non
         xaxis=dict(tickformat='%m/%Y'),
         legend_title='Ativo',
         legend_orientation='h',
-        plot_bgcolor='rgba(211, 211, 211, 0.15)'
+        plot_bgcolor='rgba(211, 211, 211, 0.15)',
+        heigth=600
     )
     fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
 
@@ -58,11 +59,15 @@ commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platina': 'PL=F', 'Cobre': 'HG=
             'Brent Oil': 'BZ=F', 'Milho': 'ZC=F', 'Soja': 'ZS=F', 'Café': 'KC=F'}
 
 
-acoes = [
-    "PETR3", "PETR4", "VALE3", "ITUB3", "ITUB4", "BBDC3", "BBDC4", 
-    "ABEV3", "BBAS3", "B3SA3", "SANB11", "WEGE3", "BPAC11", "SUZB3", 
-    "GGBR4", "ELET3", "ELET6", "RENT3", "JBSS3", "MGLU3"
-]
+acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
+        "RAIZ4","PRIO3", "VBBR3", "CSAN3", "UGPA3",  
+        "BPAC11", "SANB11", "GGBR4", "CSNA3", "USIM5",  
+        "JBSS3", "ABEV3", "MRFG3", "BRFS3", "BEEF3",  
+        "ELET3", "NEOE3", "CPFE3", "ENGI11", "EQTL3",  
+        "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3" 
+        "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", 
+        "WEGE3", "B3SA3"]
+
 
 
 acoes_dict = {acao: acao + '.SA' for acao in acoes}
