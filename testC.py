@@ -64,7 +64,7 @@ acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4",
         "BPAC11", "SANB11", "GGBR4", "CSNA3", "USIM5",  
         "JBSS3", "ABEV3", "MRFG3", "BRFS3", "BEEF3",  
         "ELET3", "NEOE3", "CPFE3", "ENGI11", "EQTL3",  
-        "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3" 
+        "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3", 
         "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", 
         "WEGE3", "B3SA3"]
 
