@@ -96,7 +96,7 @@ col1, col2, col3 = st.columns([3, 1, 1])
 
 with col1:
     if opcao1 == 'Índices Setoriais':
-        escolha = st.multiselect('Índice', list(indices.keys()), placeholder='Ativos')
+        escolha = st.multiselect('Índices Setoriais', list(indices.keys()), placeholder='Ativos')
         ticker = [indices[indice] for indice in escolha]
         legenda_dict = {v: k for k, v in indices.items()}  # Inverte o dicionário para a legenda
 
