@@ -82,7 +82,7 @@ with col1:
 
     elif opcao1 == 'Ações':
         escolha = st.multiselect('Ações', list(acoes_dict.keys()), placeholder='Ativos')
-        ticker = [acoes[acao] for acao in escolha]
+        ticker = [acoes_dict[acao] for acao in escolha]
         legenda_dict = {v: k for k, v in acoes_dict.items()}  # Inverte o dicionário para a legenda
 
 with col2:
