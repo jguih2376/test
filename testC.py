@@ -34,7 +34,11 @@ def calcular_valorizacao(dados):
     
     df_var = pd.DataFrame(index=dados.columns)
     df_var['Último Preço'] = dados.iloc[-1]
-    
+     # Captura o preço da data de início selecionada (ou do primeiro disponível)
+    preco_inicio = dados.loc[dados.index[dados.index >= pd.to_datetime(data_inicio)], :].iloc[0] if not dados.empty else None
+
+    # Retorno considerando data selecionada
+    df_var['Período Selecionado (%)'] = ((dados.iloc[-1] / preco_inicio) - 1) * 100 if preco_inicio is not None else None
     # Retornos considerando períodos específicos
     df_var['1 Dia (%)'] = ((dados.iloc[-1] / dados.iloc[-2]) - 1) * 100 if len(dados) > 1 else None
     df_var['1 Semana (%)'] = ((dados.iloc[-1] / dados.iloc[-5]) - 1) * 100 if len(dados) > 5 else None
