@@ -1,124 +1,51 @@
+import pandas as pd
 import streamlit as st
-import plotly.graph_objects as go
-from bcb import sgs
+import yfinance as yf
 
-@st.cache_data
-def get_data():
-    selic = sgs.get({'Selic': 432}, start='2000-01-01')
-    selic_atual = selic.iloc[-1].values[0]
-    ipca = sgs.get({'IPCA': 13522}, start='2000-01-01')
-    ipca_atual = ipca.iloc[-1].values[0]
+# Função para carregar dados históricos dos ativos
+@st.cache_data(ttl=600)
+def carregar_dados(tickers, data_inicio, data_fim):
+    if not tickers:
+        return pd.DataFrame()
+
+    dados = {}
+    for ticker in tickers:
+        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
+        dados[ticker] = hist
+
+    return pd.DataFrame(dados).dropna()
+
+# Função para calcular valorização histórica
+def calcular_valorizacao(dados, data_inicio):
+    if dados.empty:
+        return pd.DataFrame()
     
-    # Calculando juros reais
-    juros_reais = selic - ipca
-    juros_reais_atual = juros_reais.iloc[-1].values[0]
+    df_var = pd.DataFrame(index=dados.columns)
+    df_var['Último Preço (R$)'] = dados.iloc[-1]
+
+    # Captura o preço da data de início selecionada (ou do primeiro disponível)
+    preco_inicio = dados.loc[dados.index[dados.index >= pd.to_datetime(data_inicio)], :].iloc[0] if not dados.empty else None
+
+    df_var['Desde Data Selecionada (%)'] = ((dados.iloc[-1] / preco_inicio) - 1) * 100 if preco_inicio is not None else None
+    df_var['1 Dia (%)'] = ((dados.iloc[-1] / dados.iloc[-2]) - 1) * 100 if len(dados) > 1 else None
+    df_var['1 Semana (%)'] = ((dados.iloc[-1] / dados.iloc[-5]) - 1) * 100 if len(dados) > 5 else None
+    df_var['1 Mês (%)'] = ((dados.iloc[-1] / dados.iloc[-21]) - 1) * 100 if len(dados) > 21 else None
+    df_var['1 Ano (%)'] = ((dados.iloc[-1] / dados.iloc[0]) - 1) * 100  # Comparação com o primeiro dia disponível
+
+    return df_var.round(2)
+
+# Interface no Streamlit
+st.subheader("📊 Desempenho Histórico dos Ativos")
+
+tickers = st.multiselect("Selecione os ativos:", ["AAPL", "GOOGL", "MSFT"], default=["AAPL", "GOOGL"])
+data_inicio = st.date_input("Data de início", pd.to_datetime('2020-01-01').date())
+data_fim = st.date_input("Data de término", pd.to_datetime('today').date())
+
+if st.button("Gerar Valorização"):
+    dados = carregar_dados(tickers, data_inicio, data_fim)
     
-    return selic, selic_atual, ipca, ipca_atual, juros_reais, juros_reais_atual
-
-def app():
-    st.title("Estatística Monetária")
-
-    # Obtendo dados com cache
-    selic, selic_atual, ipca, ipca_atual, juros_reais, juros_reais_atual = get_data()
-
-    col1, col2 = st.columns([5, 1])
-    with col1:
-        # Criando gráfico interativo da Selic
-        fig_selic = go.Figure()
-        fig_selic.add_trace(go.Scatter(x=selic.index, y=selic['Selic'], mode='lines'))
-        fig_selic.add_trace(go.Scatter(x=[selic.index[-1]], y=[selic_atual], mode='markers', marker=dict(color='red', size=5)))
-
-        fig_selic.update_layout(
-            title='Taxa de Juros SELIC',
-            title_x=0.4, 
-            yaxis_title='Taxa de Juros (%)',
-            showlegend=False,
-            plot_bgcolor='rgba(211, 211, 211, 0.15)'
-        )
-        fig_selic.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot', zeroline=False, range=[0, fig_selic.data[0]['y'].max() * 1.1])
-        fig_selic.update_xaxes(showgrid=False, zeroline=False)
-
-        fig_selic.add_annotation(
-            x=selic.index[-1], 
-            y=selic_atual,
-            text=f'{selic_atual:.2f}%',
-            showarrow=True,
-            arrowhead=0,
-            ax=20,
-            ay=-40,
-            bordercolor='yellow'
-        )
-
-        # Criando gráfico interativo do IPCA
-        fig_ipca = go.Figure()
-        fig_ipca.add_trace(go.Scatter(x=ipca.index, y=ipca['IPCA'], mode='lines'))
-        fig_ipca.add_trace(go.Scatter(x=[ipca.index[-1]], y=[ipca_atual], mode='markers', marker=dict(color='red', size=5)))
-
-        fig_ipca.update_layout(
-            title='IPCA Acumulado 12M',
-            title_x=0.4, 
-            yaxis_title='IPCA acumulado (%)',
-            xaxis_title='Data',
-            showlegend=False,
-            plot_bgcolor='rgba(211, 211, 211, 0.15)'
-        )
-        fig_ipca.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot', zeroline=False, range=[0, fig_ipca.data[0]['y'].max() * 1.1])
-        fig_ipca.update_xaxes(showgrid=False, zeroline=False)
-
-        fig_ipca.add_annotation(
-            x=ipca.index[-1], 
-            y=ipca_atual,
-            text=f'{ipca_atual:.2f}%',
-            showarrow=True,
-            arrowhead=0,
-            ax=20,
-            ay=-40,
-            bordercolor='yellow'
-        )
-
-        # Criando gráfico do Juro Real
-        fig_juros_reais = go.Figure()
-        fig_juros_reais.add_trace(go.Scatter(x=juros_reais.index, y=juros_reais.iloc[:, 0], mode='lines'))
-        fig_juros_reais.add_trace(go.Scatter(x=[juros_reais.index[-1]], y=[juros_reais_atual], mode='markers', marker=dict(color='red', size=5)))
-
-        fig_juros_reais.update_layout(
-            title='Juro Real (SELIC - IPCA)',
-            title_x=0.4, 
-            yaxis_title='Juro Real (%)',
-            xaxis_title='Data',
-            showlegend=False,
-            plot_bgcolor='rgba(211, 211, 211, 0.15)'
-        )
-        fig_juros_reais.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot', zeroline=False, range=[juros_reais.iloc[:, 0].min() * 1.1, juros_reais.iloc[:, 0].max() * 1.1])
-        fig_juros_reais.update_xaxes(showgrid=False, zeroline=False)
-
-        fig_juros_reais.add_annotation(
-            x=juros_reais.index[-1], 
-            y=juros_reais_atual,
-            text=f'{juros_reais_atual:.2f}%',
-            showarrow=True,
-            arrowhead=0,
-            ax=20,
-            ay=-40,
-            bordercolor='yellow'
-        )
-
-        # Exibindo os gráficos no Streamlit
-        st.plotly_chart(fig_selic)
-        st.plotly_chart(fig_ipca)
-        st.plotly_chart(fig_juros_reais)
-
-    with col2:
-        st.write('')
-        st.write('')
-
-        iframe_code = """
-        <div style="text-align: center; padding: 10px; font-family: sans-serif;">
-            <span style="font-size: 16px; font-weight: bold; display: block; margin-bottom: 8px; color: white;">Mundo</span>
-            <iframe frameborder="0" scrolling="no" height="146" width="108" allowtransparency="true" marginwidth="0" marginheight="0" 
-            src="https://sslirates.investing.com/index.php?rows=1&bg1=FFFFFF&bg2=F1F5F8&text_color=333333&enable_border=hide&border_color=0452A1&
-            header_bg=ffffff&header_text=FFFFFF&force_lang=12" align="center"></iframe>
-        </div>
-        """
-        
-        st.components.v1.html(iframe_code, height=180)
+    if not dados.empty:
+        df_valorizacao = calcular_valorizacao(dados, data_inicio)
+        st.dataframe(df_valorizacao)
+    else:
+        st.warning("Nenhum dado disponível para os tickers selecionados.")
