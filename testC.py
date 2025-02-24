@@ -29,14 +29,20 @@ def calcular_valorizacao(dados, data_inicio):
     df_var = pd.DataFrame(index=dados.columns)
     df_var['Último Preço (R$)'] = dados.iloc[-1]
 
+    # Converter index do DataFrame para datetime, garantindo compatibilidade
+    dados.index = pd.to_datetime(dados.index)
+
     # Converter data_inicio para Timestamp para evitar erro de comparação
     data_inicio_dt = pd.to_datetime(data_inicio)
 
-    if any(dados.index >= data_inicio_dt):
-        preco_inicio = dados.loc[dados.index[dados.index >= data_inicio_dt], :].iloc[0]
+    # Filtrar o primeiro dado disponível a partir da data selecionada
+    dados_filtrados = dados[dados.index >= data_inicio_dt]
+    
+    if not dados_filtrados.empty:
+        preco_inicio = dados_filtrados.iloc[0]
         df_var['Desde Data Selecionada (%)'] = ((dados.iloc[-1] / preco_inicio) - 1) * 100
     else:
-        df_var['Desde Data Selecionada (%)'] = None  # Caso não haja dados disponíveis
+        df_var['Desde Data Selecionada (%)'] = None  # Se não houver dados, evita erro
 
     df_var['1 Dia (%)'] = ((dados.iloc[-1] / dados.iloc[-2]) - 1) * 100 if len(dados) > 1 else None
     df_var['1 Semana (%)'] = ((dados.iloc[-1] / dados.iloc[-5]) - 1) * 100 if len(dados) > 5 else None
