@@ -1,149 +1,154 @@
 import streamlit as st
-import pandas as pd
-import yfinance as yf
-import seaborn as sns
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from bcb import sgs
 
+@st.cache_data
+def get_data():
+    dolar = sgs.get({'Dólar': 10813}, start='2000-01-01')
+    dolar_atual = dolar.iloc[-1].values[0]
+    selic = sgs.get({'Selic': 432}, start='2000-01-01')
+    selic_atual = selic.iloc[-1].values[0]
+    ipca = sgs.get({'IPCA': 13522}, start='2000-01-01')
+    ipca_atual = ipca.iloc[-1].values[0]
 
-st.write('---')
-# Título da página
-st.subheader("Desempenho Relativo dos Ativos")
-
-# Função para carregar os dados usando yfinance
-@st.cache_data(ttl=600)  # Cache atualizado a cada 10 min
-def carregar_dados(tickers, data_inicio, data_fim):
-    if not tickers:
-        return pd.DataFrame()
-
-    dados = {}
-    for ticker in tickers:
-        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Adj Close']
-        dados[ticker] = hist
-
-    return pd.DataFrame(dados).dropna()  # Remove valores NaN
-
-def calcular_performance(dados):
-    if not dados.empty:
-        return (dados / dados.iloc[0] - 1) * 100
-    return dados
-
-def calcular_valorizacao(dados):
-    if dados.empty:
-        return pd.DataFrame()
+    # Calcular juros real
+    juros_real = ((1 + selic_atual) / (1 + ipca_atual)) - 1
     
-    df_var = pd.DataFrame(index=dados.columns)
-    df_var['Último Preço'] = dados.iloc[-1]
+    return selic, selic_atual, ipca, ipca_atual, juros_real, dolar, dolar_atual
 
-    # Retornos considerando períodos específicos
-    df_var['1 Dia (%)'] = ((dados.iloc[-1] / dados.iloc[-2]) - 1) * 100 if len(dados) > 1 else None
-    df_var['1 Semana (%)'] = ((dados.iloc[-1] / dados.iloc[-5]) - 1) * 100 if len(dados) > 5 else None
-    df_var['1 Mês (%)'] = ((dados.iloc[-1] / dados.iloc[-21]) - 1) * 100 if len(dados) > 21 else None
-    df_var['Período Selecionado (%)'] = ((dados.iloc[-1] / dados.iloc[0]) - 1) * 100  # Comparação com o início da amostra
-    
-    return df_var.round(2)
-def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=None):
-    fig = go.Figure()
-    for ativo in ativos_selecionados:
-        nome_ativo = legenda_dict.get(ativo, ativo)  # Usa a chave do dicionário para o nome
-        # Dados normalizados ou brutos
-        y_data = calcular_performance(dados)[ativo] if normalizado else dados[ativo]
+st.title("🏛️ Estatística Monetária")
 
-        # Adicionando linha do gráfico
-        fig.add_trace(go.Scatter(
-            x=dados.index,
-            y=y_data,
-            name=nome_ativo,  # Utiliza a chave do dicionário na legenda
-            mode='lines',  # Apenas a linha
-            line=dict(width=1)
-        ))
+# Obtendo dados com cache
+selic, selic_atual, ipca, ipca_atual, juros_real, dolar, dolar_atual = get_data()
 
-        # Adicionando bolinha no último ponto
-        fig.add_trace(go.Scatter(
-            x=[dados.index[-1]],  # Último ponto do gráfico
-            y=[y_data.iloc[-1]],  # Último valor
-            mode='markers',
-            marker=dict(size=5, color='red', symbol='circle'),
-            name=f'{nome_ativo} - Último Preço',
-            showlegend=False
-        ))
+col1, col2 = st.columns([5, 1])
+with col1:
+    # Criando gráfico interativo da Selic
+    fig_selic = go.Figure()
+    fig_selic.add_trace(go.Scatter(x=selic.index, y=selic['Selic'], mode='lines', name="Selic"))
+    fig_selic.add_trace(go.Scatter(x=[selic.index[-1]], y=[selic_atual], mode='markers', marker=dict(color='red', size=5), name="Última Selic"))
 
-    # Ajustando a data do eixo X para intervalo de 1 ano
-    fig.update_layout(
-        title=f"{'Desempenho Relativo (%)' if normalizado else 'Preço dos Ativos'}",
-        yaxis_title='Performance (%)' if normalizado else 'Preço',
-        xaxis=dict(
-            tickformat='%Y',  # Exibe o ano
-            tickmode='array',  # Define um modo de marcação personalizada
-            tickvals=dados.index[::252],  # Marca um ponto a cada 252 dias (aproximadamente 1 ano de pregão)
-        ),
-        legend_title='Ativos',
-        legend_orientation='h',
-        plot_bgcolor='rgba(211, 211, 211, 0.15)',
-        height=600,
-        margin=dict(r=10)  # Ajusta a margem à direita
+    fig_selic.update_layout(
+        title='Taxa de Juros SELIC',
+        title_x=0.4, 
+        yaxis_title='Taxa de Juros (%)',
+        showlegend=False,
+        plot_bgcolor='rgba(211, 211, 211, 0.15)',  # Cor de fundo cinza claro
     )
-    fig.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot')
+    fig_selic.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot', zeroline=False,  range=[0, fig_selic.data[0]['y'].max() * 1.1])
+    fig_selic.update_xaxes(showgrid=False, zeroline=False)
 
-    return fig
+    # Adicionando anotação para destacar o valor atual
+    fig_selic.add_annotation(
+        x=selic.index[-1], 
+        y=selic_atual,
+        text=f'{selic_atual:.2f}%',
+        showarrow=True,
+        arrowhead=0,
+        ax=20,
+        ay=-40,
+        bordercolor='yellow'
+    )
 
-# Opções de seleção para ativos
-indices = {'IBOV': '^BVSP','EWZ':'EWZ', 'S&P500': '^GSPC', 'NASDAQ': '^IXIC', 'FTSE100': '^FTSE', 'DAX': '^GDAXI',
-        'CAC40': '^FCHI', 'SSE Composite': '000001.SS', 'Nikkei225': '^N225', 'Merval': '^MERV'}
+    # Criando gráfico interativo do IPCA
+    fig_ipca = go.Figure()
+    fig_ipca.add_trace(go.Scatter(x=ipca.index, y=ipca['IPCA'], mode='lines', name="IPCA"))
+    fig_ipca.add_trace(go.Scatter(x=[ipca.index[-1]], y=[ipca_atual], mode='markers', marker=dict(color='red', size=5), name="Último IPCA"))
 
-commodities = {'Ouro': 'GC=F', 'Prata': 'SI=F', 'Platinum': 'PL=F', 'Cobre': 'HG=F', 'WTI Oil':'CL=F', 'Brent Oil':'BZ=F',
-            'Gasolina':'RB=F', 'Gás Natural':'NG=F', 'Gado Vivo':'LE=F', 'Porcos Magros':'LE=F', 'Milho':'ZC=F',
-            'Soja':'ZS=F', 'Cacau':'CC=F', 'Café':'KC=F'}
+    fig_ipca.update_layout(
+        title='IPCA Acumulado 12M',
+        title_x=0.4, 
+        yaxis_title='IPCA acumulado (%)',
+        showlegend=False,
+        plot_bgcolor='rgba(211, 211, 211, 0.15)',  # Cor de fundo cinza claro
+    )
+    fig_ipca.update_yaxes(showgrid=True, gridwidth=0.1, gridcolor='gray', griddash='dot', zeroline=False, range=[0, fig_ipca.data[0]['y'].max() * 1.1])
+    fig_ipca.update_xaxes(showgrid=False, zeroline=False)
 
-acoes = ["PETR4", "VALE3","ITUB4", "BBAS3", "BBDC4", "RAIZ4","PRIO3", "VBBR3", "CSAN3", "UGPA3", "BPAC11", "SANB11",
-        "GGBR4", "CSNA3", "USIM5", "JBSS3", "ABEV3", "MRFG3", "BRFS3", "BEEF3", "ELET3", "NEOE3", "CPFE3", "ENGI11",
-        "EQTL3", "SUZB3", "KLBN11", "DTEX3", "RANI3", "MRFG3", "CYRE3", "MRVE3", "EZTC3", "CVCB3", "TRIS3", "WEGE3", "B3SA3"]
+    # Adicionando anotação para destacar o valor atual
+    fig_ipca.add_annotation(
+        x=ipca.index[-1], 
+        y=ipca_atual,
+        text=f'{ipca_atual:.2f}%',
+        showarrow=True,
+        arrowhead=0,
+        ax=20,
+        ay=-40,
+        bordercolor='yellow'
+    )
 
-acoes_dict = {acao: acao + '.SA' for acao in acoes}
+    # Exibindo os gráficos com o Streamlit
+    st.plotly_chart(fig_selic)
+    st.plotly_chart(fig_ipca)
 
-# Layout para selecionar os ativos e definir o período dentro do expander
-with st.expander('...', expanded=True):
-    # Seleção de opções
-    opcao1 = st.selectbox('Selecione:', ['Índices', 'Ações', 'Commodities'])
-    with st.form(key='meu_form'):
-        col1, col2, col3 = st.columns([3, 1, 1])
+with col2:
+    st.write('')
+    st.write('')
 
-        with col1:
-            if opcao1 == 'Índices':
-                escolha = st.multiselect('', list(indices.keys()), placeholder='Índices')
-                ticker = [indices[indice] for indice in escolha]
-                legenda_dict = {v: k for k, v in indices.items()}  # Inverte o dicionário para a legenda
+    # Exibindo o iframe com alinhamento ajustado
+    iframe_code = """
+    <div style="text-align: center; padding: 10px; font-family: sans-serif;">
+        <span style="font-size: 16px; font-weight: bold; display: block; margin-bottom: 8px; color: white;">Mundo</span>
+        <iframe frameborder="0" scrolling="no" height="146" width="108" allowtransparency="true" marginwidth="0" marginheight="0" 
+        src="https://sslirates.investing.com/index.php?rows=1&bg1=FFFFFF&bg2=F1F5F8&text_color=333333&enable_border=hide&border_color=0452A1&
+        header_bg=ffffff&header_text=FFFFFF&force_lang=12" align="center"></iframe>
+    </div>
+    """
+    st.components.v1.html(iframe_code, height=180)
 
-            elif opcao1 == 'Commodities':
-                escolha = st.multiselect('', list(commodities.keys()), placeholder='Commodities')
-                ticker = [commodities[commodity] for commodity in escolha]
-                legenda_dict = {v: k for k, v in commodities.items()}  # Inverte o dicionário para a legenda
+with col1:
+    # Criando gráfico interativo do Dólar
+    fig_dolar = go.Figure()
 
-            elif opcao1 == 'Ações':
-                escolha = st.multiselect('', list(acoes_dict.keys()), placeholder='Ações')
-                ticker = [acoes_dict[acao] for acao in escolha]
-                legenda_dict = {v: k for k, v in acoes_dict.items()}  # Inverte o dicionário para a legenda
+    # Linha do dólar ao longo do tempo
+    fig_dolar.add_trace(go.Scatter(
+        x=dolar.index, 
+        y=dolar['Dólar'], 
+        mode='lines',
+        width=1,
+        name="Cotação do Dólar"
+    ))
 
-        with col2:
-            data_inicio = st.date_input('Data de início', pd.to_datetime('2020-01-01').date(), format='DD/MM/YYYY')
+    # Ponto final destacado
+    fig_dolar.add_trace(go.Scatter(
+        x=[dolar.index[-1]], 
+        y=[dolar_atual], 
+        mode='markers', 
+        marker=dict(color='red', size=8),
+        name="Última cotação"
+    ))
 
-        with col3:
-            data_fim = st.date_input('Data de término', pd.to_datetime('today').date(), format='DD/MM/YYYY')
+    # Layout do gráfico
+    fig_dolar.update_layout(
+        title='💵 Cotação do Dólar',
+        title_x=0.4,  # Centraliza melhor o título
+        yaxis_title='Valor em R$',
+        showlegend=False,
+        plot_bgcolor='rgba(211, 211, 211, 0.15)',  # Fundo mais claro para facilitar leitura
+    )
 
-        # Adicionando o checkbox para desempenho percentual
-        normalizado = st.checkbox("Exibir desempenho percentual", value=True)
+    # Ajustes nos eixos
+    fig_dolar.update_yaxes(
+        showgrid=True, 
+        gridwidth=0.1, 
+        gridcolor='gray',
+        griddash='dot', 
+        zeroline=False,  
+        range=[dolar['Dólar'].min() * 0.9, dolar['Dólar'].max() * 1.1]  # Ajuste dinâmico do eixo Y
+    )
 
-        # Submissão do formulário
-        submit_button = st.form_submit_button(label='Gerar Gráfico')
+    fig_dolar.update_xaxes(showgrid=False, zeroline=False)
 
-    # Carregar os dados reais e mostrar o gráfico quando o botão for pressionado
-    if submit_button and ticker:
+    # Adicionando anotação para destacar o valor atual
+    fig_dolar.add_annotation(
+        x=dolar.index[-1], 
+        y=dolar_atual,
+        text=f'R${dolar_atual:.2f}',
+        showarrow=True,
+        arrowhead=0,
+        ax=20,
+        ay=-40,
+        bordercolor='yellow'
+    )
 
-        dados = carregar_dados(ticker, data_inicio, data_fim)
-        if not dados.empty:
-            fig = criar_grafico(ticker, dados, normalizado, legenda_dict)
-            st.plotly_chart(fig)
-            df_valorizacao = calcular_valorizacao(dados)
-            st.dataframe(df_valorizacao)
-        else:
-            st.warning("Nenhum dado disponível para os tickers selecionados.")
+    st.plotly_chart(fig_dolar)
