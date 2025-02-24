@@ -18,7 +18,7 @@ def carregar_dados(tickers, data_inicio, data_fim):
 
     dados = {}
     for ticker in tickers:
-        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Close']
+        hist = yf.Ticker(ticker).history(start=data_inicio, end=data_fim)['Adj Close']
         dados[ticker] = hist
 
     return pd.DataFrame(dados).dropna()  # Remove valores NaN
@@ -39,7 +39,7 @@ def calcular_valorizacao(dados):
     df_var['1 Dia (%)'] = ((dados.iloc[-1] / dados.iloc[-2]) - 1) * 100 if len(dados) > 1 else None
     df_var['1 Semana (%)'] = ((dados.iloc[-1] / dados.iloc[-5]) - 1) * 100 if len(dados) > 5 else None
     df_var['1 Mês (%)'] = ((dados.iloc[-1] / dados.iloc[-21]) - 1) * 100 if len(dados) > 21 else None
-    df_var['1 Ano (%)'] = ((dados.iloc[-1] / dados.iloc[0]) - 1) * 100  # Comparação com o início da amostra
+    df_var['Período Selecionado (%)'] = ((dados.iloc[-1] / dados.iloc[0]) - 1) * 100  # Comparação com o início da amostra
     
     return df_var.round(2)
 def criar_grafico(ativos_selecionados, dados, normalizado=True, legenda_dict=None):
