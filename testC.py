@@ -57,15 +57,25 @@ with st.expander('...', expanded=True):
         dados = yf.download(ticker, start=data_inicial, end=data_final, interval="1mo")
 
         if not dados.empty:
-            retornos = dados['Close'].pct_change().dropna()
-            retornos = retornos.reset_index()
+            dados['Retorno'] = dados['Close'].pct_change()
+            retornos = dados[['Retorno']].dropna().reset_index()
             retornos['Year'] = retornos['Date'].dt.year
             retornos['Month'] = retornos['Date'].dt.month
 
-            tabela_retornos = retornos.pivot(index='Year', columns='Month', values='Close')
-            tabela_retornos.columns = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
-                                       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
-            tabela_retornos['Anual'] = (1 + tabela_retornos).prod(axis=1) - 1  # Ajustado
+            # Criar a tabela pivotada corretamente
+            tabela_retornos = retornos.pivot(index='Year', columns='Month', values='Retorno').dropna(how='all')
+
+            if not tabela_retornos.empty:
+                tabela_retornos.columns = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
+                                        'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                tabela_retornos['Anual'] = (1 + tabela_retornos).prod(axis=1) - 1
+
+                st.write(tabela_retornos)
+            else:
+                st.warning("Não há retornos suficientes para calcular os dados.")
+        else:
+            st.error("Erro ao buscar os dados. Verifique o ticker ou tente novamente mais tarde.")
+
 
             # Heatmap
             fig, ax = plt.subplots(figsize=(12, 9))
